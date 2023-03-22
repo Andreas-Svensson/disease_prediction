@@ -62,5 +62,5 @@ def times_model_ran(param_grid, cv = 5) -> None:
 
     times *= cv # multiply by amount cross-validations
 
-    print(f"Model is fitted {times} times using the specified parameters")
+    return times
 
