@@ -37,8 +37,24 @@ def evaluate_grid_search(grid_search, param_grid) -> None:
         print()
 
 
+def times_model_ran(param_grid, cv = 5) -> None:
+    """Calculate how many times a model is fitted using GridSearchCV"""
+    times = 1
+
+    for i in param_grid: # calculate amount of settings in param grid
+        times *= len(param_grid[i])
+
+    times *= cv # multiply by amount cross-validations
+
+    return times
+
+
 def perform_grid_search(X_val, y_val, param_grid, model, cv = 5, n_jobs = -1, scoring = "recall", evaluate = False):
     """Instantiate GridSearchCV based on parameters, fit based on val data, evaluate = True prints out best parameters found"""
+    if evaluate:
+        times = times_model_ran(param_grid, cv)
+        print(f"Model is being fitted {times} times...")
+
     grid_search = GridSearchCV(
         estimator = model,
         param_grid = param_grid,
@@ -54,15 +70,4 @@ def perform_grid_search(X_val, y_val, param_grid, model, cv = 5, n_jobs = -1, sc
 
     return grid_search
 
-
-def times_model_ran(param_grid, cv = 5) -> None:
-    """Calculate how many times a model is fitted using GridSearchCV"""
-    times = 1
-
-    for i in param_grid: # calculate amount of settings in param grid
-        times *= len(param_grid[i])
-
-    times *= cv # multiply by amount cross-validations
-
-    return times
 
