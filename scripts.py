@@ -9,13 +9,15 @@ def feature_target(df, target):
     return X, y
 
 
-def split(X, y, test_val_size):
+def split(X, y, test_val_size, val = True):
     """Split X and y into test, val, train based on test_val_size"""
     N = test_val_size
     X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size = N, random_state = 42)
-    X_train, X_val, y_train, y_val = train_test_split(X_trainval, y_trainval, test_size = N / (1 - N), random_state = 42) # N/(1-N) gives approx N of the original dataset's size (i.e. same as test size for val)
 
-    return X_train, X_val, X_test, y_train, y_val, y_test
+    if val: # also split into validation data if val = True
+        X_train, X_val, y_train, y_val = train_test_split(X_trainval, y_trainval, test_size = N / (1 - N), random_state = 42) # N/(1-N) gives approx N of the original dataset's size (i.e. same as test size for val)
+        return X_train, X_val, X_test, y_train, y_val, y_test # return data with val
+    return X_trainval, X_test, y_trainval, y_test # return data without val
 
 
 def scale(X_train, X_val, X_test, scaler):
