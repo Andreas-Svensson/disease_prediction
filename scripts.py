@@ -20,13 +20,12 @@ def split(X, y, test_val_size, val = True):
     return X_trainval, X_test, y_trainval, y_test # return data without val
 
 
-def scale(X_train, X_val, X_test, scaler):
+def scale(X_train, X_val, scaler):
     """Scale data based on input scaler, returns scaled data"""
     X_train_scaled = scaler.fit_transform(X_train)
     X_val_scaled = scaler.transform(X_val)
-    X_test_scaled = scaler.transform(X_test)
 
-    return X_train_scaled, X_val_scaled, X_test_scaled
+    return X_train_scaled, X_val_scaled
 
 
 def evaluate_grid_search(grid_search, param_grid) -> None:
@@ -49,25 +48,71 @@ def times_model_ran(param_grid, cv = 5) -> None:
     return times
 
 
-def perform_grid_search(X_val, y_val, param_grid, model, cv = 5, n_jobs = -1, scoring = "recall", evaluate = False):
-    """Instantiate GridSearchCV based on parameters, fit based on val data, evaluate = True prints out best parameters found"""
-    if evaluate:
-        times = times_model_ran(param_grid, cv)
-        print(f"Model is being fitted {times} times...")
+def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1, scoring = "recall"):
+    """Instantiate GridSearchCV based on model and parameters, fit based on X, y data"""
 
+    # instantiate grid_search
     grid_search = GridSearchCV(
         estimator = model,
         param_grid = param_grid,
         cv = cv,
         n_jobs = n_jobs,
-        scoring = scoring
+        scoring = scoring,
     )
 
-    grid_search.fit(X_val, y_val)
-
-    if evaluate == True: # print evaluation results
-        evaluate_grid_search(grid_search, param_grid)
+    grid_search.fit(X, y) # fit to data
 
     return grid_search
 
+
+def tune_param_grid(grid_search, param_grid: dict) -> dict:
+    """Tune param_grid values based on GridSearchCV results, returns updated param_grid"""
+    # store old values
+    old = dict(param_grid) 
+
+    # loop over results of best grid search params
+    for key, value in grid_search.best_params_.items():
+
+        # if numeric:
+        if type(value) == int or type(value) == float:
+
+            # if lowest value was best:
+            if value == param_grid[key][0]:
+                # calculate new upper and lower values for that parameter
+                low = value / 2 # new lower value is half of current
+
+                diff_up = param_grid[key][1] - param_grid[key][0] # calculate difference between old middle and low values
+                high = value + diff_up / 2 # new higher value is old value increased by half the distance to old high
+            
+            # if middle value was best:
+            if value == param_grid[key][1]:
+                # calculate new upper and lower values for that parameter
+                diff_down = param_grid[key][1] - param_grid[key][0] # calculate difference between old middle and low values
+                low = value - diff_down / 2 # new lower value is old value decreased by half the distance to old low
+
+                diff_up = param_grid[key][2] - param_grid[key][1] # calculate difference between old high and middle values
+                high = value + diff_up / 2 # new higher value is old value increased by half the distance to old high
+            
+            # if highest value was best:
+            if value == param_grid[key][2]:
+                # calculate new upper and lower values for that parameter
+                diff_down = param_grid[key][2] - param_grid[key][1] # calculate difference between old high and middle values
+                low = value - diff_down / 2 # new lower value is old value decreased by half the distance to old low
+
+                high = value * 2 # new higher value is twice of current
+
+            # update parameter with new calculated low, middle, and high values to use in next grid search
+            param_grid[key] = [round(low, 3), round(value, 3), round(high, 3)] # round to not get into crazy decimals
+    
+    # display changes made
+    for key, values in param_grid.items():
+        # if numerical:
+        if type(values[0]) == int or type(values[0]) == float:
+            # print old parameter values compared to new
+            print(f"'{key}' parameter values: (best {grid_search.best_params_[key]})")
+            print(f"old: {old[key]}")
+            print(f"new: {values}")
+            print()
+
+    return param_grid
 
