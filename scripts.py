@@ -1,4 +1,8 @@
+import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import make_scorer, accuracy_score, recall_score
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
 
 def feature_target(df, target):
@@ -28,12 +32,12 @@ def scale(X_train, X_val, scaler):
     return X_train_scaled, X_val_scaled
 
 
-def evaluate_grid_search(grid_search, param_grid) -> None:
-    """Print out gridsearch's best parameters out of possible available parameters in a neatly formatted manner"""
-    for i in grid_search.best_params_:
-        print(f"{i}:")
-        print(f"'{grid_search.best_params_[i]}' chosen out of possible {param_grid[i]}")
-        print()
+# def evaluate_grid_search(grid_search, param_grid) -> None:
+#     """Print out gridsearch's best parameters out of possible available parameters in a neatly formatted manner"""
+#     for i in grid_search.best_params_:
+#         print(f"{i}:")
+#         print(f"'{grid_search.best_params_[i]}' chosen out of possible {param_grid[i]}")
+#         print()
 
 
 def times_model_ran(param_grid, cv = 5) -> None:
@@ -48,8 +52,11 @@ def times_model_ran(param_grid, cv = 5) -> None:
     return times
 
 
-def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1, scoring = "recall"):
+def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1):
     """Instantiate GridSearchCV based on model and parameters, fit based on X, y data"""
+
+    # score results mainly on accuracy, but weighted towards recall
+    scorer = make_scorer(lambda y_true, y_pred: 0.3 * recall_score(y_true, y_pred, pos_label=1) + 0.7 * accuracy_score(y_true, y_pred))
 
     # instantiate grid_search
     grid_search = GridSearchCV(
@@ -57,7 +64,7 @@ def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1, scoring = 
         param_grid = param_grid,
         cv = cv,
         n_jobs = n_jobs,
-        scoring = scoring,
+        scoring = scorer,
     )
 
     grid_search.fit(X, y) # fit to data
@@ -115,4 +122,18 @@ def tune_param_grid(grid_search, param_grid: dict) -> dict:
             print()
 
     return param_grid
+
+
+def evaluate_predictions_plot(ys: list, y_preds: list, suptitle: str, subplot_titles: list = ["Categorical Standardized", "Categorical Normalized", "Non-Categorical Standardized", "Non-Categorical Normalized"]) -> None:
+
+    fig, axes = plt.subplots(2, 2, figsize = [12, 8])
+    
+    # plot confusion matrix
+    for ax, y, y_pred, title in zip(axes.flatten(), ys, y_preds, subplot_titles):
+        cm = confusion_matrix(y, y_pred)
+        ConfusionMatrixDisplay(cm, display_labels = ["No", "Yes"]).plot(ax = ax)
+        ax.set_title(title)
+    
+    plt.tight_layout()
+    plt.suptitle(suptitle, x=0.5, y=1.05, horizontalalignment = 'center', fontsize = 16)
 
