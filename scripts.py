@@ -1,8 +1,22 @@
+# import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import make_scorer, accuracy_score, recall_score
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+
+
+def calculate_outliers(data):
+    """Use Tukey's fence to calculate outliers, return lower and upper boundaries"""
+    Q1 = data.quantile(0.25)
+    Q3 = data.quantile(0.75)
+    IQR = Q3 - Q1
+
+    outlier_lower = Q1 - 1.5 * IQR
+    outlier_upper = Q3 + 1.5 * IQR
+
+    return outlier_lower, outlier_upper
 
 
 def feature_target(df, target):
@@ -11,6 +25,32 @@ def feature_target(df, target):
     y = df[target]
 
     return X, y
+
+
+def violin_outliers_by_gender(outliers: dict, df, feature) -> dict:
+    """Input dictionary of outliers as key (feature): value (tuple: lower, upper)"""
+    
+    # calculate and add outliers to dict as key (gender) and value (tuple: lower outlier, upper outlier)
+    # outliers = {"Women": calculate_outliers(df[df["gender"] == 1][feature]), "Men": calculate_outliers(df[df["gender"] == 2][feature])}
+
+    # set up subplots
+    fig, axes = plt.subplots(1, len(outliers), figsize = (8 * len(outliers), 4))
+
+    # loop over outliers and axes
+    for i, (gender, ax) in enumerate(zip(outliers, axes.flatten())):
+
+        # plot feature data
+        sns.violinplot(data = df[df["gender"] == i+1], y = feature, ax = ax)
+        ax.set_title(gender)
+
+        # plot horizontal lines for outliers
+        ax.axhline(y = outliers[gender][1], label = f"Upper bound outlier = {outliers[gender][1]:.1f}", color = "r", linestyle = "--", alpha = 0.7)
+        ax.axhline(y = outliers[gender][0], label = f"Lower bound outlier = {outliers[gender][0]:.1f}", color = "r", linestyle = "--", alpha = 0.7)
+        ax.legend(loc = "upper right")
+
+    plt.suptitle(f"{feature.capitalize()} Distribution and Outliers by Gender")
+    # return dictionary of key (gender) and value (tuple: lower outlier, upper outlier)
+    # return outliers
 
 
 def split(X, y, test_val_size, val = True):
