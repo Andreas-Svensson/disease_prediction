@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import make_scorer, accuracy_score, recall_score
+from sklearn.metrics import make_scorer, balanced_accuracy_score, precision_score, recall_score
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.utils._testing import ignore_warnings # used to suppress warnings from grid search fit
 
@@ -74,14 +74,6 @@ def scale(X_train, X_val, scaler):
     return X_train_scaled, X_val_scaled
 
 
-# def evaluate_grid_search(grid_search, param_grid) -> None:
-#     """Print out gridsearch's best parameters out of possible available parameters in a neatly formatted manner"""
-#     for i in grid_search.best_params_:
-#         print(f"{i}:")
-#         print(f"'{grid_search.best_params_[i]}' chosen out of possible {param_grid[i]}")
-#         print()
-
-
 def times_model_ran(param_grid, cv = 5) -> None:
     """Calculate how many times a model is fitted using GridSearchCV"""
     times = 1
@@ -94,12 +86,48 @@ def times_model_ran(param_grid, cv = 5) -> None:
     return times
 
 
-# custom scorer for use in grid search - focus mainly on accuracy but weighted towards recall
-custom_scorer = make_scorer(lambda y_true, y_pred: 0.3 * recall_score(y_true, y_pred, pos_label=1) + 0.7 * accuracy_score(y_true, y_pred))
+def display_gridsearch_results(grid_search, param_grid):
+    """Print best parameters found next to list of possible parameters gridsearch had available"""
+
+    # pick out best parameters
+    best_params = grid_search.best_params_
+
+    print(f"Grid search results")
+    print(f"\n-------------------\n")
+
+    # iterate over parameter keys
+    for i, param in enumerate(best_params):
+
+        # print out best parameter out of possible parameters in param_grid
+        print(f"'{param}' best param: {best_params[param]}")
+        print(f" out of: {param_grid[param]}\n")
+
+    print(f"-------------------\n")
+    
+    # finally print the score matching above parameters
+    print(f"Best score: {grid_search.best_score_}")
+
+
+
+def custom_scorer(y_true, y_pred):
+    """Calculate GridSearchCV score based on weights, used as default scorer in perform_grid_search """
+    recall_weight = 2  # weight towards recall
+    precision_weight = 1
+    accuracy_weight = 1
+    
+    # compute precision, recall, and accuracy
+    precision = precision_score(y_true, y_pred)
+    recall = recall_score(y_true, y_pred)
+    accuracy = balanced_accuracy_score(y_true, y_pred)
+    
+    # combine scores multiplied by their respectice weight, divide by sum of all weights
+    score = (recall_weight * recall + precision_weight * precision + accuracy_weight * accuracy) / (recall_weight + precision_weight + accuracy_weight)
+    
+    return score
 
 
 @ignore_warnings() # suppress warnings from grid search fit
-def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1, scoring = custom_scorer):
+def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1, scoring = make_scorer(custom_scorer), display_results = True):
     """Instantiate GridSearchCV based on model and parameters, fit based on X, y data"""
 
     # instantiate grid_search
@@ -112,6 +140,9 @@ def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1, scoring = 
     )
 
     grid_search.fit(X, y) # fit to data
+
+    if display_results: # print out best parameters found
+        display_gridsearch_results(grid_search, param_grid)
 
     return grid_search
 
@@ -157,8 +188,10 @@ def tune_param_grid(grid_search, param_grid: dict) -> dict:
     
     # display changes made
     for key, values in param_grid.items():
+
         # if numerical:
         if type(values[0]) == int or type(values[0]) == float:
+
             # print old parameter values compared to new
             print(f"'{key}' parameter values: (best {grid_search.best_params_[key]})")
             print(f"old: {old[key]}")
@@ -168,9 +201,10 @@ def tune_param_grid(grid_search, param_grid: dict) -> dict:
     return param_grid
 
 
-def evaluate_predictions_plot(ys: list, y_preds: list, suptitle: str, subplot_titles: list = ["Categorical Standardized", "Categorical Normalized", "Non-Categorical Standardized", "Non-Categorical Normalized"]) -> None:
+def evaluate_predictions_plot(ys: list, y_preds: list, suptitle: str, subplot_titles: list = ["Categorical Standardized", "Categorical Normalized", "Non-Categorical Standardized", "Non-Categorical Normalized"]):
+    """2x2 confusion matrix plot, returns figure"""
 
-    fig, axes = plt.subplots(2, 2, figsize = [12, 8])
+    fig, axes = plt.subplots(2, 2, figsize = [10, 6])
     
     # plot confusion matrix
     for ax, y, y_pred, title in zip(axes.flatten(), ys, y_preds, subplot_titles):
@@ -179,5 +213,7 @@ def evaluate_predictions_plot(ys: list, y_preds: list, suptitle: str, subplot_ti
         ax.set_title(title)
     
     plt.tight_layout()
-    plt.suptitle(suptitle, x=0.5, y=1.05, horizontalalignment = 'center', fontsize = 16)
+    plt.suptitle(suptitle, x = 0.55, y = 1.05, horizontalalignment = "center", fontsize = 16) # for whatever reason, 0.55 is the center of the figure
+
+    return fig
 
