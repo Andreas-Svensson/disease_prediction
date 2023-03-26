@@ -5,6 +5,8 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import make_scorer, accuracy_score, recall_score
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+from sklearn.utils._testing import ignore_warnings # used to suppress warnings from grid search fit
+
 
 
 def calculate_outliers(data):
@@ -92,11 +94,13 @@ def times_model_ran(param_grid, cv = 5) -> None:
     return times
 
 
-def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1):
-    """Instantiate GridSearchCV based on model and parameters, fit based on X, y data"""
+# custom scorer for use in grid search - focus mainly on accuracy but weighted towards recall
+custom_scorer = make_scorer(lambda y_true, y_pred: 0.3 * recall_score(y_true, y_pred, pos_label=1) + 0.7 * accuracy_score(y_true, y_pred))
 
-    # score results mainly on accuracy, but weighted towards recall
-    scorer = make_scorer(lambda y_true, y_pred: 0.3 * recall_score(y_true, y_pred, pos_label=1) + 0.7 * accuracy_score(y_true, y_pred))
+
+@ignore_warnings() # suppress warnings from grid search fit
+def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1, scoring = custom_scorer):
+    """Instantiate GridSearchCV based on model and parameters, fit based on X, y data"""
 
     # instantiate grid_search
     grid_search = GridSearchCV(
@@ -104,7 +108,7 @@ def perform_grid_search(X, y, param_grid, model, cv = 5, n_jobs = -1):
         param_grid = param_grid,
         cv = cv,
         n_jobs = n_jobs,
-        scoring = scorer,
+        scoring = scoring,
     )
 
     grid_search.fit(X, y) # fit to data
