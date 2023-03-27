@@ -13,6 +13,9 @@ df_probabilities = pd.DataFrame(probabilities, columns  = ["probability class 0"
 # combine probabilities and cardio column
 df_combined = pd.concat([df_probabilities, df["cardio"]], axis = 1)
 
+# sort values by cardio firstly, and secondly on probability class 1
+df_combined = df_combined.sort_values(by = ["cardio", "probability class 1"], ascending = False)
+
 # finally, save dataframe as csv file
 df_combined.to_csv("assets/prediction.csv")
 
