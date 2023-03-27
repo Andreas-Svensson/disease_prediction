@@ -127,4 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-.csv
+
+# ignore dataset and model files
+*.csv
+*.pkl
