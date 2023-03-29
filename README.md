@@ -42,6 +42,8 @@ Models used: Logistic Regression, KNN, Random Forest (combined through Vote Clas
 
 ### Things I learned over the course of this project and could improve for next time
 
+</br>
+
 1. **File Structure**  
 
 I used several notebooks to structure things more neatly, with one individual notebook for each separate model  
@@ -50,6 +52,8 @@ The problem with this execution was moving variables between notebooks as they n
 
 For the future, I would instead use python scripts for this part of the project, and only move the visuals into a notebook or even a markdown file for easy result evaluation while still keeping all variables in python files
 
+</br>
+
 2. **Gridsearch Function**
 
 I created a function for performing grid search, with the idea to be able to iterate over multiple grid searches, tuning the parameters closer to the previous best one multiple times. The idea was that this would be able to find very close to optimal hyperparameters without having to grid search over as many different parameter combinations.
@@ -57,6 +61,8 @@ I created a function for performing grid search, with the idea to be able to ite
 In reality however, at least for this case, the performance did not change much by tuning the hyperparameters more closely. The tradeoff in computational time vs the improved score was simply not worth it.
 
 Thus, I ended up never iterating grid searches more than once.
+
+</br>
 
 3. **Visualizing Hyperparameters**
 
