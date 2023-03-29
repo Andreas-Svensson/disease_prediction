@@ -6,7 +6,9 @@ By: [Andreas Svensson]()
 Data used: [Kaggle Cardiovascular Disease](https://www.kaggle.com/datasets/sulianova/cardiovascular-disease-dataset)  
 Models used: Logistic Regression, KNN, Random Forest (combined through Vote Classifier)  
 
----
+# Model Results
+
+![](./assets/production_model_results.png)
 
 # Engineered Features
 
