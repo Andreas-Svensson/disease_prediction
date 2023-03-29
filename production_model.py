@@ -25,10 +25,13 @@ plt.suptitle("Production Model Results")
 plt.savefig("assets/production_model_results.png")
 
 # create a dataframe of predicted probabilities
-df_probabilities = pd.DataFrame(probabilities, columns  = ["probability class 0", "probability class 1"])
+df_predictions = pd.DataFrame(probabilities, columns  = ["probability class 0", "probability class 1"])
 
-# combine probabilities and cardio column
-df_combined = pd.concat([df_probabilities, df["cardio"]], axis = 1)
+# add predictions column
+df_predictions["prediction"] = y_pred
+
+# combine predictions and cardio column
+df_combined = pd.concat([df_predictions, df["cardio"]], axis = 1)
 
 # sort values by cardio firstly, and secondly on probability class 1
 df_combined = df_combined.sort_values(by = ["cardio", "probability class 1"], ascending = False)
