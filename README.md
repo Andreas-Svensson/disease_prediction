@@ -14,6 +14,22 @@ Models used: Logistic Regression, KNN, Random Forest (combined through Vote Clas
 
 </br>
 
+# Selecting Models
+
+### Before the project
+
+When selecting models to use for this project, I took into consideration which models can handle binary classification problems and also provide a probability prediction. I landed on testing Logistic Regression, KNN, and Random Forest Classifier.  
+
+### During the project
+
+The data was split into 2 datasets, and 2 different scalers were used, as such 4 models were created for each algorithm. During the validation phase of the project these models were compared with each other and the best performing one chosen to use in a voting classifier.  
+
+Since this is medical data it is important to not predict wrong in case someone actually has increased risk of cardiovascular disease. Therefore, I scored models with high recall better through creating a custom scoring function that looks at both accuracy, precision, and recall but weights recall heavier than the others.  
+
+The final evaluation for selecting the model was manually looking at the plotted confusion matrix comparison. Making sure that the model predicted well overall, but weighed more towards predicting false positives than false negatives. Interestingly, the same dataset and the same scaler consistently gave better results, and as such the same dataset and scaler could be used for all 3 models going into the voting classifier.  
+
+</br>
+
 # Engineered Features
 
 ### bmi_category
